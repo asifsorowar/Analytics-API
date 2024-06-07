@@ -1,0 +1,60 @@
+version: "3.8"
+
+volumes:
+  mongo_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  rabbitmq_log:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  rabbitmq:
+    container_name: ph-rabbitmq
+    image: rabbitmq:3.13.3-alpine
+    restart: unless-stopped
+    expose:
+      - 5672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq
+    networks:
+      - app-network
+
+  db:
+    container_name: ph-mongodb
+    image: mongo:4.0.16-xenial
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - app-network
+
+  server:
+    container_name: ph-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 5000:5000
+    depends_on:
+      - rabbitmq
+      - db
+    environment:
+      - QUEUE_SERVER=amqp://rabbitmq
+      - DB=mongodb://db/ph-assessment
+      - SOCKET_PORT=8800
+    env_file:
+      - ./config/config.docker.env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - app-network
