@@ -83,3 +83,7 @@
 - **Header:** `Authorization: token`
 
 **Note**: For simplicity, I have included the `.env` files in the repo. In production, the environment variables will be added manually.
+
+### Schedule jobs
+
+Have set up a job to aggregate the quiz results for the dashboard regularly, like every 10 minutes.
