@@ -8,6 +8,9 @@ const auth = require("../routers/auth");
 const users = require("../routers/users");
 const quizResults = require("../routers/quizResults");
 
+//initialize the queue handlers
+require("../schedule-jobs/index");
+
 module.exports = (app) => {
   app.use(express.json());
   app.use(cors());

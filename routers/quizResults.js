@@ -8,35 +8,6 @@ const { QuizResult, validate } = require("../models/QuizResult");
 const { QuizResultAnalytics } = require("../models/QuizResultAnalytics");
 
 const { ConnectionNames, sendMessage } = require("../utils/websocket");
-const {
-  QueueNames,
-  sendToQueue,
-  receiveMessageFromQueue,
-} = require("../utils/queue");
-const cron = require("node-cron");
-
-// the queue receiver handler for UpdateQuizResultAnalytics channel
-receiveMessageFromQueue(QueueNames.UpdateQuizResultAnalytics, async () => {
-  console.log("Message Received..");
-
-  const currentDate = new Date().toISOString();
-  const result = await QuizResult.getAnalytics();
-
-  if (result) {
-    const data = result.map((item) => ({
-      average_score: item.average_score,
-      total_score: item.total_score,
-      lowest_score: item.lowest_score,
-      highest_score: item.highest_score,
-      quiz_id: item._id,
-      timestamp: currentDate,
-    }));
-
-    await QuizResultAnalytics.insertMany(data);
-
-    sendMessage(ConnectionNames.NewQuizResultAnalytics, data);
-  }
-});
 
 /**
  * @swagger
@@ -83,15 +54,6 @@ router.get("/analytics", [auth, admin], async (req, res) => {
   const result = await QuizResultAnalytics.find();
 
   return res.status(200).send(result);
-});
-
-// the cron for updating analytics
-// will run the task every ten minute
-cron.schedule("* 10 * * * *", () => {
-  sendToQueue(
-    QueueNames.UpdateQuizResultAnalytics,
-    JSON.stringify("update-quiz-result-analytics")
-  );
 });
 
 module.exports = router;

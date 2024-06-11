@@ -1,0 +1,2 @@
+require("./quizResultsSender");
+require("./quizResultsReceiver");
